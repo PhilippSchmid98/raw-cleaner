@@ -1,0 +1,10 @@
+﻿namespace RawCleaner.Core.Models;
+
+/// <summary>
+/// Identifies the category of a photo file.
+/// </summary>
+public enum PhotoType
+{
+    Jpeg,
+    Raw
+}

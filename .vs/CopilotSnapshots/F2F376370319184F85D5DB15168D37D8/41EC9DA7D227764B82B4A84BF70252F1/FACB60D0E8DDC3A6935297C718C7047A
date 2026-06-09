@@ -1,0 +1,16 @@
+﻿namespace RawCleaner.Core.Models;
+
+/// <summary>
+/// Aggregate statistics produced by a folder analysis.
+/// </summary>
+/// <param name="TotalJpegs">Total number of JPEG files found.</param>
+/// <param name="TotalRaws">Total number of RAW files found.</param>
+/// <param name="MatchedPairs">Files that have both a JPEG and a RAW counterpart.</param>
+/// <param name="OrphanedRaws">RAW files without a matching JPEG (will be deleted).</param>
+/// <param name="OrphanedJpegs">JPEG files without a matching RAW (kept, informational).</param>
+public sealed record SyncStatistics(
+    int TotalJpegs,
+    int TotalRaws,
+    int MatchedPairs,
+    int OrphanedRaws,
+    int OrphanedJpegs);

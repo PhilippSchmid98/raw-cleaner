@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36327.8
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawCleaner.UI", "RawCleaner.UI\RawCleaner.UI.csproj", "{AA16BF1B-6076-4904-B900-07B4454B4C67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawCleaner.Core", "RawCleaner.Core\RawCleaner.Core.csproj", "{976BF9C1-2756-6A7F-A508-DD23F631CEA5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA16BF1B-6076-4904-B900-07B4454B4C67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA16BF1B-6076-4904-B900-07B4454B4C67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA16BF1B-6076-4904-B900-07B4454B4C67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA16BF1B-6076-4904-B900-07B4454B4C67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{976BF9C1-2756-6A7F-A508-DD23F631CEA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{976BF9C1-2756-6A7F-A508-DD23F631CEA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{976BF9C1-2756-6A7F-A508-DD23F631CEA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{976BF9C1-2756-6A7F-A508-DD23F631CEA5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7D98B9C0-6A78-4C51-8D93-F2320CF94EA5}
+	EndGlobalSection
+EndGlobal

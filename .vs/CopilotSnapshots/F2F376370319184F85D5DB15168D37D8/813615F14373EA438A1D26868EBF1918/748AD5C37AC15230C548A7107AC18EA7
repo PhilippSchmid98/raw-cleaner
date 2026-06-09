@@ -1,0 +1,232 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
+using RawCleaner.Core.Helpers;
+using RawCleaner.Core.Services;
+using Wpf.Ui.Controls;
+
+namespace RawCleaner.UI.ViewModels;
+
+public partial class MainViewModel : ObservableObject
+{
+    private readonly IPhotoSyncService _syncService;
+
+    public MainViewModel(IPhotoSyncService syncService)
+    {
+        _syncService = syncService;
+        // Direct field write – bypasses the property setter so the registry
+        // partial-method handler is NOT triggered on construction.
+        _isContextMenuRegistered = ContextMenuRegistrar.IsRegistered();
+    }
+
+    // -----------------------------------------------------------------------
+    // Folder paths
+    // -----------------------------------------------------------------------
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
+    private string _jpegFolderPath = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
+    private string _rawFolderPath = string.Empty;
+
+    // -----------------------------------------------------------------------
+    // Analysis results
+    // -----------------------------------------------------------------------
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CleanupCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportReportCommand))]
+    private bool _hasAnalysisResult;
+
+    [ObservableProperty] private int _totalJpegs;
+    [ObservableProperty] private int _totalRaws;
+    [ObservableProperty] private int _matchedPairs;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CleanupCommand))]
+    private int _orphanedRaws;
+
+    [ObservableProperty] private int _orphanedJpegs;
+
+    // -----------------------------------------------------------------------
+    // UI state
+    // -----------------------------------------------------------------------
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CleanupCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportReportCommand))]
+    private bool _isBusy;
+
+    [ObservableProperty]
+    private string _statusMessage =
+        "Bitte wählen Sie JPEG- und RAW-Ordner aus und starten Sie die Analyse.";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusSeverity))]
+    private bool _isStatusError;
+
+    /// <summary>Drives the InfoBar Severity without coupling the VM to a converter.</summary>
+    public InfoBarSeverity StatusSeverity =>
+        IsStatusError ? InfoBarSeverity.Error : InfoBarSeverity.Informational;
+
+    // -----------------------------------------------------------------------
+    // Context-menu toggle
+    // -----------------------------------------------------------------------
+    [ObservableProperty]
+    private bool _isContextMenuRegistered;
+
+    partial void OnIsContextMenuRegisteredChanged(bool oldValue, bool newValue)
+    {
+        try
+        {
+            var exe = Environment.ProcessPath ?? string.Empty;
+            if (newValue)
+                ContextMenuRegistrar.Register(exe);
+            else
+                ContextMenuRegistrar.Unregister();
+
+            IsStatusError = false;
+            StatusMessage = newValue
+                ? "Kontextmenü-Eintrag wurde erfolgreich hinzugefügt."
+                : "Kontextmenü-Eintrag wurde entfernt.";
+        }
+        catch (Exception ex)
+        {
+            IsStatusError = true;
+            StatusMessage = $"Fehler beim Kontextmenü: {ex.Message}";
+            // Revert without re-triggering this handler
+            _isContextMenuRegistered = oldValue;
+            OnPropertyChanged(nameof(IsContextMenuRegistered));
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Commands – Folder browse
+    // -----------------------------------------------------------------------
+    [RelayCommand]
+    private void BrowseJpegFolder()
+    {
+        var dlg = new OpenFolderDialog { Title = "JPEG-Ordner auswählen" };
+        if (dlg.ShowDialog() == true)
+            JpegFolderPath = dlg.FolderName;
+    }
+
+    [RelayCommand]
+    private void BrowseRawFolder()
+    {
+        var dlg = new OpenFolderDialog { Title = "RAW-Ordner auswählen" };
+        if (dlg.ShowDialog() == true)
+            RawFolderPath = dlg.FolderName;
+    }
+
+    // -----------------------------------------------------------------------
+    // Commands – Analyze
+    // -----------------------------------------------------------------------
+    private bool CanAnalyze() =>
+        !IsBusy &&
+        !string.IsNullOrWhiteSpace(JpegFolderPath) &&
+        !string.IsNullOrWhiteSpace(RawFolderPath);
+
+    [RelayCommand(CanExecute = nameof(CanAnalyze))]
+    private async Task AnalyzeAsync()
+    {
+        IsBusy            = true;
+        IsStatusError     = false;
+        HasAnalysisResult = false;
+        StatusMessage     = "Analyse läuft …";
+
+        try
+        {
+            var result = await _syncService.AnalyzeFoldersAsync(JpegFolderPath, RawFolderPath);
+            var s      = result.Statistics;
+
+            TotalJpegs    = s.TotalJpegs;
+            TotalRaws     = s.TotalRaws;
+            MatchedPairs  = s.MatchedPairs;
+            OrphanedRaws  = s.OrphanedRaws;
+            OrphanedJpegs = s.OrphanedJpegs;
+
+            HasAnalysisResult = true;
+            StatusMessage     =
+                $"Analyse abgeschlossen – {s.OrphanedRaws} verwaiste RAW-Datei(en) gefunden.";
+        }
+        catch (Exception ex)
+        {
+            IsStatusError = true;
+            StatusMessage = $"Fehler bei der Analyse: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Commands – Cleanup
+    // -----------------------------------------------------------------------
+    private bool CanCleanup() => !IsBusy && HasAnalysisResult && OrphanedRaws > 0;
+
+    [RelayCommand(CanExecute = nameof(CanCleanup))]
+    private async Task CleanupAsync()
+    {
+        IsBusy        = true;
+        IsStatusError = false;
+        StatusMessage = $"Bereinige {OrphanedRaws} verwaiste RAW-Datei(en) …";
+
+        try
+        {
+            await _syncService.ExecuteCleanupAsync();
+            var deleted   = OrphanedRaws;
+            OrphanedRaws      = 0;
+            HasAnalysisResult = false;
+            StatusMessage     = $"Bereinigung abgeschlossen – {deleted} RAW-Datei(en) gelöscht.";
+        }
+        catch (Exception ex)
+        {
+            IsStatusError = true;
+            StatusMessage = $"Fehler bei der Bereinigung: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Commands – Export report
+    // -----------------------------------------------------------------------
+    private bool CanExportReport() => !IsBusy && HasAnalysisResult;
+
+    [RelayCommand(CanExecute = nameof(CanExportReport))]
+    private async Task ExportReportAsync()
+    {
+        var dlg = new SaveFileDialog
+        {
+            Title      = "Bericht exportieren",
+            Filter     = "CSV-Datei (*.csv)|*.csv|Alle Dateien (*.*)|*.*",
+            FileName   = $"RawCleaner_Bericht_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            DefaultExt = ".csv"
+        };
+
+        if (dlg.ShowDialog() != true) return;
+
+        IsBusy        = true;
+        IsStatusError = false;
+        StatusMessage = "Bericht wird exportiert …";
+
+        try
+        {
+            await _syncService.ExportReportAsync(dlg.FileName);
+            StatusMessage = $"Bericht gespeichert: {dlg.FileName}";
+        }
+        catch (Exception ex)
+        {
+            IsStatusError = true;
+            StatusMessage = $"Fehler beim Export: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

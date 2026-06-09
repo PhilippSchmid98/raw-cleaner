@@ -1,0 +1,339 @@
+﻿<ui:FluentWindow
+    x:Class="RawCleaner.UI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    mc:Ignorable="d"
+    Title="RawCleaner"
+    MinWidth="640"
+    Width="740"
+    MinHeight="580"
+    Height="800"
+    Icon="/favicon.ico"
+    WindowStartupLocation="CenterScreen"
+    ExtendsContentIntoTitleBar="True">
+
+    <ui:FluentWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ─── Title Bar ────────────────────────────────────────────── -->
+        <ui:TitleBar Grid.Row="0" Title="RawCleaner" />
+
+        <!-- ─── Scrollable Content ───────────────────────────────────── -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="16,8,16,16">
+                <!-- ── Header row with settings gear ────────────────── -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="RAW / JPEG Synchronizer"
+                        Style="{StaticResource TitleTextBlockStyle}"
+                        VerticalAlignment="Center" />
+                    <ui:Button
+                        Grid.Column="1"
+                        Icon="{ui:SymbolIcon Settings24}"
+                        Appearance="Secondary"
+                        ToolTip="Einstellungen"
+                        Command="{Binding OpenSettingsCommand}"
+                        Padding="10,6" />
+                </Grid>
+                <!-- ══ Card 1 · Folder Selection ════════════════════════ -->
+                <ui:Card Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock
+                            Text="Ordnerauswahl"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Margin="0,0,0,16" />
+
+                        <!-- JPEG folder row -->
+                        <TextBlock
+                            Text="JPEG-Ordner"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            Margin="0,0,0,4" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:TextBox
+                                Grid.Column="0"
+                                PlaceholderText="Pfad zum JPEG-Ordner …"
+                                Text="{Binding JpegFolderPath, UpdateSourceTrigger=PropertyChanged}"
+                                IsReadOnly="True"
+                                Margin="0,0,8,0" />
+                            <ui:Button
+                                Grid.Column="1"
+                                Icon="{ui:SymbolIcon FolderOpen24}"
+                                Content="Durchsuchen"
+                                Command="{Binding BrowseJpegFolderCommand}" />
+                        </Grid>
+
+                        <!-- RAW folder row -->
+                        <TextBlock
+                            Text="RAW-Ordner"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            Margin="0,0,0,4" />
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:TextBox
+                                Grid.Column="0"
+                                PlaceholderText="Pfad zum RAW-Ordner …"
+                                Text="{Binding RawFolderPath, UpdateSourceTrigger=PropertyChanged}"
+                                IsReadOnly="True"
+                                Margin="0,0,8,0" />
+                            <ui:Button
+                                Grid.Column="1"
+                                Icon="{ui:SymbolIcon FolderOpen24}"
+                                Content="Durchsuchen"
+                                Command="{Binding BrowseRawFolderCommand}" />
+                        </Grid>
+
+                        <ui:Button
+                            Content="Analyse starten"
+                            Appearance="Primary"
+                            Icon="{ui:SymbolIcon Search24}"
+                            Command="{Binding AnalyzeCommand}"
+                            HorizontalAlignment="Right"
+                            MinWidth="160" />
+                    </StackPanel>
+                </ui:Card>
+
+                <!-- ══ Card 1b · Sort RAWs (shown when JPEG folder has mixed content) ═══ -->
+                <ui:Card
+                    Margin="0,0,0,12"
+                    Visibility="{Binding HasMixedContent, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <!-- Header row with RAW / JPEG badges -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                Text="RAW-Dateien sortieren"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Border CornerRadius="10" Padding="8,3" Margin="0,0,6,0"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                    <TextBlock FontSize="12">
+                                        <Run Text="{Binding MixedFolderRawCount}" FontWeight="SemiBold"
+                                             Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+                                        <Run Text=" RAWs" />
+                                    </TextBlock>
+                                </Border>
+                                <Border CornerRadius="10" Padding="8,3"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                    <TextBlock FontSize="12">
+                                        <Run Text="{Binding MixedFolderJpegCount}" FontWeight="SemiBold" />
+                                        <Run Text=" JPEGs" />
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock
+                            Text="Dieser Ordner enthält sowohl JPEG- als auch RAW-Dateien. Die RAW-Dateien können in einen Unterordner verschoben werden."
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            TextWrapping="Wrap"
+                            Margin="0,0,0,12" />
+
+                        <TextBlock
+                            Text="Zielordner für RAW-Dateien"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            Margin="0,0,0,4" />
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:TextBox
+                                Grid.Column="0"
+                                Text="{Binding MoveTargetPath, UpdateSourceTrigger=PropertyChanged}"
+                                PlaceholderText="Zielordner für RAW-Dateien …"
+                                Margin="0,0,8,0" />
+                            <ui:Button
+                                Grid.Column="1"
+                                Icon="{ui:SymbolIcon FolderOpen24}"
+                                Content="Durchsuchen"
+                                Command="{Binding BrowseMoveTargetCommand}" />
+                        </Grid>
+
+                        <ui:Button
+                            Content="RAWs verschieben"
+                            Appearance="Primary"
+                            Icon="{ui:SymbolIcon ArrowRight24}"
+                            Command="{Binding ExecuteMoveCommand}"
+                            HorizontalAlignment="Right"
+                            MinWidth="160" />
+                    </StackPanel>
+                </ui:Card>
+
+                <!-- ══ Card 2 · Statistics (shown after analysis) ════════ -->
+                <ui:Card
+                    Margin="0,0,0,12"
+                    Visibility="{Binding HasAnalysisResult, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock
+                            Text="Analyse-Ergebnis"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Margin="0,0,0,16" />
+
+                        <!-- 5-column statistics tiles -->
+                        <UniformGrid Rows="1" Columns="5" Margin="0,0,0,20">
+
+                            <Border CornerRadius="8" Margin="0,0,5,0"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel Margin="8,12">
+                                    <TextBlock Text="{Binding TotalJpegs}"
+                                               FontSize="26" FontWeight="Bold"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="JPEGs" FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border CornerRadius="8" Margin="0,0,5,0"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel Margin="8,12">
+                                    <TextBlock Text="{Binding TotalRaws}"
+                                               FontSize="26" FontWeight="Bold"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="RAWs" FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border CornerRadius="8" Margin="0,0,5,0"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel Margin="8,12">
+                                    <TextBlock Text="{Binding MatchedPairs}"
+                                               FontSize="26" FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource SystemFillColorSuccessBrush}" />
+                                    <TextBlock Text="Matches" FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Orphaned RAWs — turns red when HasOrphanedRaws is true -->
+                            <Border CornerRadius="8" Margin="0,0,5,0"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel Margin="8,12">
+                                    <TextBlock Text="{Binding OrphanedRaws}"
+                                               FontSize="26" FontWeight="Bold"
+                                               HorizontalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasOrphanedRaws}" Value="True">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="Verw. RAWs" FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border CornerRadius="8"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel Margin="8,12">
+                                    <TextBlock Text="{Binding OrphanedJpegs}"
+                                               FontSize="26" FontWeight="Bold"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="Verw. JPEGs" FontSize="11"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <!-- Action buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <ui:Button
+                                Content="Bericht exportieren"
+                                Icon="{ui:SymbolIcon ArrowDownload24}"
+                                Command="{Binding ExportReportCommand}"
+                                Margin="0,0,8,0" />
+                            <ui:Button
+                                Content="Bereinigen"
+                                Appearance="Caution"
+                                Icon="{ui:SymbolIcon Delete24}"
+                                Command="{Binding CleanupCommand}"
+                                MinWidth="140" />
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <!-- ══ Card 3 · Settings ══════════════════════════════════ -->
+                <ui:CardControl
+                    Margin="0,0,0,12"
+                    Icon="{ui:SymbolIcon Settings24}">
+                    <ui:CardControl.Header>
+                        <StackPanel>
+                            <TextBlock Text="Explorer-Kontextmenü" />
+                            <TextBlock
+                                Text="RawCleaner im Rechtsklick-Menü für Ordner registrieren"
+                                FontSize="11"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </ui:CardControl.Header>
+                    <ui:ToggleSwitch IsChecked="{Binding IsContextMenuRegistered}" />
+                </ui:CardControl>
+
+                <!-- ══ Status InfoBar ══════════════════════════════════════ -->
+                <ui:InfoBar
+                    IsOpen="True"
+                    IsClosable="False"
+                    Title="Status"
+                    Message="{Binding StatusMessage}"
+                    Severity="{Binding StatusSeverity}" />
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ─── Busy overlay ─────────────────────────────────────────── -->
+        <Grid Grid.Row="1"
+              Background="#CC1A1A1A"
+              Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:ProgressRing IsIndeterminate="True" Width="56" Height="56" />
+                <TextBlock
+                    Text="{Binding StatusMessage}"
+                    Margin="0,16,0,0"
+                    HorizontalAlignment="Center"
+                    FontSize="14" />
+            </StackPanel>
+        </Grid>
+
+    </Grid>
+</ui:FluentWindow>

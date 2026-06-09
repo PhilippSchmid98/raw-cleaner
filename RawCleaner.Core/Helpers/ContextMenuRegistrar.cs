@@ -1,0 +1,63 @@
+using Microsoft.Win32;
+
+namespace RawCleaner.Core.Helpers;
+
+/// <summary>
+/// Manages the Windows Explorer folder context-menu entry for RawCleaner.
+/// Writes/removes entries under HKEY_CURRENT_USER so no elevation is required.
+/// </summary>
+public static class ContextMenuRegistrar
+{
+    private const string AppName    = "RawCleaner";
+    private const string MenuLabel  = "Mit RawCleaner öffnen";
+
+    // HKCU path for the folder context menu (no elevation needed)
+    private const string RegistryPath =
+        @"Software\Classes\Directory\shell\" + AppName;
+
+    /// <summary>Returns true if the context-menu entry is currently registered.</summary>
+    public static bool IsRegistered()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(RegistryPath);
+        return key is not null;
+    }
+
+    /// <summary>
+    /// Adds the context-menu entry pointing to the running executable.
+    /// </summary>
+    /// <param name="executablePath">
+    /// Full path to RawCleaner.UI.exe. Pass
+    /// <c>Environment.ProcessPath</c> from the UI layer.
+    /// </param>
+    public static void Register(string executablePath)
+    {
+        // Create/open the shell key
+        using var shellKey = Registry.CurrentUser.CreateSubKey(RegistryPath, writable: true);
+        shellKey.SetValue(null, MenuLabel);
+        shellKey.SetValue("Icon", $"\"{executablePath}\"");
+
+        // Create the command sub-key
+        using var cmdKey = shellKey.CreateSubKey("command", writable: true);
+        // %V is the selected folder path, passed as the first argument
+        cmdKey.SetValue(null, $"\"{executablePath}\" \"%V\"");
+    }
+
+    /// <summary>Removes the context-menu entry if it exists.</summary>
+    public static void Unregister()
+    {
+        Registry.CurrentUser.DeleteSubKeyTree(RegistryPath, throwOnMissingSubKey: false);
+    }
+
+    /// <summary>Toggles registration on/off and returns the new state.</summary>
+    public static bool Toggle(string executablePath)
+    {
+        if (IsRegistered())
+        {
+            Unregister();
+            return false;
+        }
+
+        Register(executablePath);
+        return true;
+    }
+}

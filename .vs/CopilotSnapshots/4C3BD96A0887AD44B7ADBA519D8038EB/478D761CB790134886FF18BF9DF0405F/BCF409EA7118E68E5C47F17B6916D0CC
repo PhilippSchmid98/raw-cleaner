@@ -1,0 +1,9 @@
+﻿namespace RawCleaner.Core.Models;
+
+/// <summary>
+/// Represents a single photo file discovered on disk.
+/// </summary>
+/// <param name="FullPath">Absolute path to the file.</param>
+/// <param name="BaseName">File name without extension (used for matching).</param>
+/// <param name="Type">Whether this is a JPEG or a RAW file.</param>
+public record PhotoFile(string FullPath, string BaseName, PhotoType Type);

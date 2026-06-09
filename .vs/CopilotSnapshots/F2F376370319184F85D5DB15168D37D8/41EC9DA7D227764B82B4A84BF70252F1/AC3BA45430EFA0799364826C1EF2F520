@@ -1,0 +1,8 @@
+﻿namespace RawCleaner.Core.Models;
+
+/// <summary>
+/// Represents a planned or executed action for a single photo file.
+/// </summary>
+/// <param name="File">The photo file this action applies to.</param>
+/// <param name="Action">What will happen (or happened) to the file.</param>
+public sealed record SyncAction(PhotoFile File, ActionType Action);

@@ -1,0 +1,23 @@
+﻿using System.Windows;
+using RawCleaner.Core.Services;
+using RawCleaner.UI.ViewModels;
+
+namespace RawCleaner.UI
+{
+    public partial class App : Application
+    {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            var syncService = new PhotoSyncService();
+            var viewModel   = new MainViewModel(syncService);
+
+            if (e.Args.Length > 0 && Directory.Exists(e.Args[0]))
+                viewModel.RawFolderPath = e.Args[0];
+
+            var window = new MainWindow(viewModel);
+            window.Show();
+        }
+    }
+}

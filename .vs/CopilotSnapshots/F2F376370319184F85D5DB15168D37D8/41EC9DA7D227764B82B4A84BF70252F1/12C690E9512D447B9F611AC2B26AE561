@@ -1,0 +1,10 @@
+﻿namespace RawCleaner.Core.Models;
+
+/// <summary>
+/// Identifies whether a photo file is a JPEG or a RAW image.
+/// </summary>
+public enum FileType
+{
+    Jpeg,
+    Raw
+}
