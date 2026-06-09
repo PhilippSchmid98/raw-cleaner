@@ -35,7 +35,7 @@ Dieses Projekt wurde mit Fokus auf sauberen, wartbaren Code entwickelt:
 3. Stelle die NuGet-Pakete wieder her.
 4. Kompiliere das Projekt und starte die Anwendung.
 
-## 📖 Verwendung
+## 📖 Verwendungf
 
 1. **Ordner auswählen:** Wähle deinen Ordner mit den JPEGs sowie den Ordner mit den dazugehörigen RAW-Dateien. 
 2. **Analysieren:** Klicke auf "Analyse starten". RawCleaner zeigt dir an, wie viele verwaiste RAW-Dateien gefunden wurden.
